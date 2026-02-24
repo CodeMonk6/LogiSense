@@ -1,0 +1,44 @@
+# Scenario: Suez Canal Disruption
+# ─────────────────────────────────────────────────────────────────
+# Models the 2021-style Suez Canal blockage event.
+# A large container vessel grounds in the canal, halting traffic
+# for 6 days.  Affects 140+ ports worldwide via cascading delays.
+# ─────────────────────────────────────────────────────────────────
+
+name: suez_disruption
+type: lane_closure
+description: >
+  Large container vessel grounds in Suez Canal.
+  Northbound and southbound traffic halted for 6 days.
+  Cascading delays propagate to European and Asian ports.
+
+disrupted_lane: suez_canal
+onset_day: 3             # days from now when disruption hits
+duration_days: 6
+severity: 0.95           # 0-1; 1.0 = complete closure
+
+affected_ports:
+  - port_rotterdam
+  - port_hamburg
+  - port_singapore
+  - port_jebel_ali
+  - port_port_said
+
+signal_injection:
+  satellite:
+    vessel_density_norm: 0.95
+    speed_zscore: 0.90
+    lane_closure_indicator: 1.0
+    diversion_rate: 0.80
+  weather:
+    severe_composite: 0.20    # low — not weather-driven
+  geopolitics:
+    geo_composite: 0.15
+  sentiment:
+    overall_risk: 0.30
+
+expected_outcomes:
+  avg_delay_days: 12
+  rerouting_cost_usd: 450000
+  affected_shipments: 320
+  lead_time_increase_pct: 25

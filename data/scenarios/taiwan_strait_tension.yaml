@@ -1,0 +1,49 @@
+# Scenario: Taiwan Strait Tension
+# ─────────────────────────────────────────────────────────────────
+# Geopolitical escalation in the Taiwan Strait triggers export
+# controls on advanced semiconductor components.  Affects global
+# electronics and automotive supply chains.
+# ─────────────────────────────────────────────────────────────────
+
+name: taiwan_strait_tension
+type: geopolitical_escalation
+description: >
+  Military exercises in Taiwan Strait followed by export controls
+  on advanced chip components.  Supplier sentiment spikes 45 days
+  before inventory impact.
+
+onset_day: 14            # geopolitics signal leads by ~2 weeks
+duration_days: 60
+severity: 0.75
+
+affected_commodities:
+  - advanced_logic_chips
+  - DRAM
+  - NAND_flash
+  - display_panels
+
+affected_suppliers:
+  - taiwan_fab_tier1
+  - korea_memory_tier1
+
+signal_injection:
+  satellite:
+    lane_closure_indicator: 0.45
+    diversion_rate: 0.30
+  weather:
+    severe_composite: 0.10
+  geopolitics:
+    conflict_intensity: 0.82
+    export_control: 0.91
+    sanctions_risk: 0.78
+    geo_composite: 0.85
+  sentiment:
+    distress_score: 0.75
+    going_concern: 0.60
+    overall_risk: 0.80
+
+expected_outcomes:
+  inventory_coverage_drop_days: 18
+  affected_skus: 850
+  emergency_procurement_usd: 12000000
+  lead_time_increase_pct: 45

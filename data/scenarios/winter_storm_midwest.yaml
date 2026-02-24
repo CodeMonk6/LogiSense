@@ -1,0 +1,48 @@
+# Scenario: Winter Storm — US Midwest
+# ─────────────────────────────────────────────────────────────────
+# Polar vortex event hits US Midwest.  Major DCs in Chicago,
+# Indianapolis, and Memphis experience 3-day closures and
+# 7-day degraded operations.
+# ─────────────────────────────────────────────────────────────────
+
+name: winter_storm_midwest
+type: weather_event
+description: >
+  Polar vortex delivers −25°C temperatures across the US Midwest.
+  Highway closures disrupt ground freight.  DC workers unable to
+  report; power outages at 2 facilities.
+
+onset_day: 5
+duration_days: 10
+severity: 0.72
+
+affected_nodes:
+  - dc_chicago
+  - dc_indianapolis
+  - dc_memphis
+  - dc_st_louis
+
+affected_modes:
+  - road
+  - rail    # frozen switches
+
+signal_injection:
+  satellite:
+    weather_delay_proxy: 0.88
+    lane_utilization_rate: 0.20
+  weather:
+    snow_risk: 0.95
+    temp_anomaly: 0.92
+    severe_composite: 0.89
+    flood_risk_72h: 0.35
+  geopolitics:
+    geo_composite: 0.05
+  sentiment:
+    absenteeism_proxy: 0.80
+    operational_risk: 0.72
+
+expected_outcomes:
+  closure_days: 3
+  degraded_days: 7
+  freight_delay_avg_days: 4.5
+  stockout_risk_pct: 22

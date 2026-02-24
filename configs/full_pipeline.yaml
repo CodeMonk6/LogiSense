@@ -1,0 +1,38 @@
+name: logisense_full_pipeline
+version: "0.1.0"
+mock_signals: true
+
+network:
+  n_nodes: 20
+  demand_sigma: 0.10
+
+signals:
+  T_lookback: 30
+  d_model: 128
+
+causal:
+  d_signal: 128
+  d_model: 256
+  n_layers: 6
+  horizon_days: 21
+  update_dag_every_days: 7
+
+agent:
+  n_actions: 64
+  hidden_dim: 256
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_epsilon: 0.20
+  entropy_coef: 0.01
+  value_coef: 0.50
+  lr: 3.0e-4
+  n_epochs: 4
+  rollout_steps: 128
+  total_episodes: 50000
+
+reward:
+  w_continuity: 0.50
+  w_cost:       0.20
+  w_speed:      0.20
+  w_stockout:   0.10
+  target_fill:  0.95
