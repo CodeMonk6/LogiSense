@@ -28,16 +28,25 @@ snow_risk, visibility_risk, lightning,
 heat_stress, drought_severity, severe_composite
 """
 
-import numpy as np
 from typing import Dict, List, Optional
+
+import numpy as np
 
 N_WEATHER_FEATURES = 12
 
 FEATURE_NAMES = [
-    "cyclone_proximity", "cyclone_intensity", "precip_risk",
-    "flood_risk_72h", "wind_zscore", "temp_anomaly",
-    "snow_risk", "visibility_risk", "lightning",
-    "heat_stress", "drought_severity", "severe_composite",
+    "cyclone_proximity",
+    "cyclone_intensity",
+    "precip_risk",
+    "flood_risk_72h",
+    "wind_zscore",
+    "temp_anomaly",
+    "snow_risk",
+    "visibility_risk",
+    "lightning",
+    "heat_stress",
+    "drought_severity",
+    "severe_composite",
 ]
 
 
@@ -78,9 +87,12 @@ class WeatherProcessor:
 
     @staticmethod
     def cyclone_risk(
-        node_lat: float, node_lon: float,
-        storm_lat: float, storm_lon: float,
-        category: int, landfall_hours: float,
+        node_lat: float,
+        node_lon: float,
+        storm_lat: float,
+        storm_lon: float,
+        category: int,
+        landfall_hours: float,
         decay_km: float = 500.0,
     ) -> float:
         """
@@ -93,11 +105,13 @@ class WeatherProcessor:
         """
         dlat = np.radians(node_lat - storm_lat)
         dlon = np.radians(node_lon - storm_lon)
-        a = (np.sin(dlat / 2) ** 2
-             + np.cos(np.radians(storm_lat))
-             * np.cos(np.radians(node_lat))
-             * np.sin(dlon / 2) ** 2)
+        a = (
+            np.sin(dlat / 2) ** 2
+            + np.cos(np.radians(storm_lat))
+            * np.cos(np.radians(node_lat))
+            * np.sin(dlon / 2) ** 2
+        )
         dist_km = 6371.0 * 2.0 * np.arcsin(np.sqrt(a))
         intensity = category / 5.0
-        time_decay = np.exp(-landfall_hours / 144.0)   # 144 h = 6-day e-fold
+        time_decay = np.exp(-landfall_hours / 144.0)  # 144 h = 6-day e-fold
         return float(intensity * np.exp(-dist_km / decay_km) * time_decay)

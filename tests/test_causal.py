@@ -1,12 +1,12 @@
 """Tests for the causal disruption engine."""
 
 import numpy as np
-import torch
 import pytest
+import torch
 
-from logisense.signals import SignalFusionEngine
-from logisense.causal  import CausalDisruptionEngine, DisruptionForecast, NodeRisk
+from logisense.causal import CausalDisruptionEngine, DisruptionForecast, NodeRisk
 from logisense.causal.notears import NOTEARSLearner
+from logisense.signals import SignalFusionEngine
 
 NODE_IDS = [f"node_{i:03d}" for i in range(8)]
 
@@ -42,37 +42,37 @@ class TestNOTEARS:
 
 class TestCausalDisruptionEngine:
     def test_forecast_returns_correct_type(self, signal_state):
-        engine   = CausalDisruptionEngine()
+        engine = CausalDisruptionEngine()
         forecast = engine.forecast(signal_state)
         assert isinstance(forecast, DisruptionForecast)
 
     def test_all_nodes_present(self, signal_state):
-        engine   = CausalDisruptionEngine()
+        engine = CausalDisruptionEngine()
         forecast = engine.forecast(signal_state)
         for nid in NODE_IDS:
             assert nid in forecast.node_risks
 
     def test_risk_probabilities_range(self, signal_state):
-        engine   = CausalDisruptionEngine()
+        engine = CausalDisruptionEngine()
         forecast = engine.forecast(signal_state)
         for nr in forecast.node_risks.values():
             for p in nr.risk_by_day.values():
                 assert 0.0 <= p <= 1.0
 
     def test_risk_matrix_shape(self, signal_state):
-        engine   = CausalDisruptionEngine()
+        engine = CausalDisruptionEngine()
         forecast = engine.forecast(signal_state)
-        mat      = forecast.risk_matrix()
+        mat = forecast.risk_matrix()
         assert mat.shape == (len(NODE_IDS), 5)
 
     def test_high_risk_nodes_property(self, signal_state):
-        engine   = CausalDisruptionEngine()
+        engine = CausalDisruptionEngine()
         forecast = engine.forecast(signal_state)
-        hr       = forecast.high_risk_nodes
+        hr = forecast.high_risk_nodes
         assert all(r.peak_score > 0.6 for r in hr)
 
     def test_attribution_sums_to_one(self, signal_state):
-        engine   = CausalDisruptionEngine()
+        engine = CausalDisruptionEngine()
         forecast = engine.forecast(signal_state)
         for nr in forecast.node_risks.values():
             total = sum(nr.attribution.values())

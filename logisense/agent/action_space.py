@@ -28,12 +28,12 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional
 
 # ── action type constants ─────────────────────────────────────────────────
-NOOP       = 0
-REROUTE    = 1
+NOOP = 0
+REROUTE = 1
 REALLOCATE = 2
-PROCURE    = 3
-EXPEDITE   = 4
-HEDGE      = 5
+PROCURE = 3
+EXPEDITE = 4
+HEDGE = 5
 
 N_ACTION_TYPES = 6
 
@@ -41,11 +41,12 @@ N_ACTION_TYPES = 6
 @dataclass
 class ActionSpec:
     """Specification for one discrete action."""
-    action_id:    int
-    action_type:  int
-    target:       str          # node_id or lane_id
-    parameter:    float = 1.0  # e.g. order_qty_factor, inventory_fraction
-    description:  str  = ""
+
+    action_id: int
+    action_type: int
+    target: str  # node_id or lane_id
+    parameter: float = 1.0  # e.g. order_qty_factor, inventory_fraction
+    description: str = ""
 
 
 class ActionSpace:
@@ -66,7 +67,9 @@ class ActionSpace:
 
     def __init__(self, network=None, max_actions: int = 64):
         self.max_actions = max_actions
-        self._actions:   List[ActionSpec] = [ActionSpec(0, NOOP, "global", 0.0, "No action")]
+        self._actions: List[ActionSpec] = [
+            ActionSpec(0, NOOP, "global", 0.0, "No action")
+        ]
         if network is not None:
             self._build(network)
 
@@ -79,28 +82,35 @@ class ActionSpace:
             # REROUTE
             preds = list(network.graph.predecessors(nid))
             for p in preds[:2]:
-                self._actions.append(ActionSpec(
-                    aid, REROUTE, nid, 1.0,
-                    f"Reroute inbound to {nid} via {p}"
-                ))
+                self._actions.append(
+                    ActionSpec(
+                        aid, REROUTE, nid, 1.0, f"Reroute inbound to {nid} via {p}"
+                    )
+                )
                 aid += 1
                 if aid >= self.max_actions:
                     return
 
             # REALLOCATE
-            self._actions.append(ActionSpec(
-                aid, REALLOCATE, nid, 0.5,
-                f"Transfer 50% excess inventory to {nid}"
-            ))
+            self._actions.append(
+                ActionSpec(
+                    aid, REALLOCATE, nid, 0.5, f"Transfer 50% excess inventory to {nid}"
+                )
+            )
             aid += 1
             if aid >= self.max_actions:
                 return
 
             # PROCURE
-            self._actions.append(ActionSpec(
-                aid, PROCURE, nid, 2.0,
-                f"Trigger contingent procurement for {nid} (2× safety stock)"
-            ))
+            self._actions.append(
+                ActionSpec(
+                    aid,
+                    PROCURE,
+                    nid,
+                    2.0,
+                    f"Trigger contingent procurement for {nid} (2× safety stock)",
+                )
+            )
             aid += 1
 
         # Pad remaining slots with NOOP
@@ -130,9 +140,9 @@ class ActionSpace:
 # Default registry (used before network topology is known)
 ACTION_REGISTRY: Dict[int, dict] = {
     0: {"type": "noop"},
-    1: {"type": "reroute",    "target": "node_000"},
+    1: {"type": "reroute", "target": "node_000"},
     2: {"type": "reallocate", "target": "node_001"},
-    3: {"type": "procure",    "target": "node_002"},
-    4: {"type": "expedite",   "target": "node_003"},
-    5: {"type": "hedge",      "target": "global"},
+    3: {"type": "procure", "target": "node_002"},
+    4: {"type": "expedite", "target": "node_003"},
+    5: {"type": "hedge", "target": "global"},
 }

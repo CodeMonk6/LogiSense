@@ -33,27 +33,56 @@ commodity_shock, trade_concentration, wto_dispute,
 sanctions_commodity, regime_change, geo_composite
 """
 
-import numpy as np
 from typing import Dict, List, Optional
+
+import numpy as np
 
 N_GEO_FEATURES = 24
 
 FEATURE_NAMES = [
-    "trade_restriction", "sanctions_risk", "conflict_intensity",
-    "protest_labor", "election_instability", "regulatory_change",
-    "tariff_escalation", "export_control", "currency_crisis",
-    "govt_stability", "border_closure", "infra_attack",
-    "gpr_normalized", "news_volume_anomaly", "neg_sentiment",
-    "supply_mentions", "ally_risk", "adversary_escalation",
-    "commodity_shock", "trade_concentration", "wto_dispute",
-    "sanctions_commodity", "regime_change", "geo_composite",
+    "trade_restriction",
+    "sanctions_risk",
+    "conflict_intensity",
+    "protest_labor",
+    "election_instability",
+    "regulatory_change",
+    "tariff_escalation",
+    "export_control",
+    "currency_crisis",
+    "govt_stability",
+    "border_closure",
+    "infra_attack",
+    "gpr_normalized",
+    "news_volume_anomaly",
+    "neg_sentiment",
+    "supply_mentions",
+    "ally_risk",
+    "adversary_escalation",
+    "commodity_shock",
+    "trade_concentration",
+    "wto_dispute",
+    "sanctions_commodity",
+    "regime_change",
+    "geo_composite",
 ]
 
 SUPPLY_KEYWORDS = [
-    "port closure", "factory shutdown", "strike", "sanctions",
-    "export ban", "tariff", "supply shortage", "logistics disruption",
-    "border closed", "cargo seized", "production halt", "force majeure",
-    "trade war", "chip shortage", "raw material", "shipping delay",
+    "port closure",
+    "factory shutdown",
+    "strike",
+    "sanctions",
+    "export ban",
+    "tariff",
+    "supply shortage",
+    "logistics disruption",
+    "border closed",
+    "cargo seized",
+    "production halt",
+    "force majeure",
+    "trade war",
+    "chip shortage",
+    "raw material",
+    "shipping delay",
 ]
 
 
@@ -70,7 +99,7 @@ class GeopoliticsProcessor:
 
     def __init__(self, model_name: str = "ProsusAI/finbert"):
         self.model_name = model_name
-        self._nlp = None   # lazy-loaded
+        self._nlp = None  # lazy-loaded
 
     def fetch(self, node_ids: List[str], mock: bool = True) -> np.ndarray:
         """Return (N, 24) geopolitical feature matrix."""
@@ -95,6 +124,7 @@ class GeopoliticsProcessor:
         if self._nlp is None:
             try:
                 from transformers import pipeline as hf_pipeline
+
                 self._nlp = hf_pipeline(
                     "text-classification", model=self.model_name, device=-1
                 )
@@ -113,7 +143,9 @@ class GeopoliticsProcessor:
         keyword_hits = sum(1 for kw in SUPPLY_KEYWORDS if kw in lower)
         relevance = min(1.0, keyword_hits / 3.0)
 
-        if self._nlp == "unavailable" or not callable(getattr(self._nlp, "__call__", None)):
+        if self._nlp == "unavailable" or not callable(
+            getattr(self._nlp, "__call__", None)
+        ):
             return {
                 "supply_relevance": relevance,
                 "neg_sentiment": 0.5,
@@ -137,6 +169,7 @@ class GeopoliticsProcessor:
         Normalized to baseline (100 = historical average).
         """
         conflict_kws = ["war", "attack", "threat", "military", "crisis", "conflict"]
-        total = sum(v for k, v in news_counts.items()
-                    if any(w in k for w in conflict_kws))
+        total = sum(
+            v for k, v in news_counts.items() if any(w in k for w in conflict_kws)
+        )
         return float(total / max(baseline, 1.0))

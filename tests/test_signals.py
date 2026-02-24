@@ -1,15 +1,14 @@
 """Tests for the signal fusion pipeline."""
 
 import numpy as np
-import torch
 import pytest
+import torch
 
-from logisense.signals import SignalFusionEngine, FusedSignalState
-from logisense.signals.satellite   import SatelliteProcessor, N_SATELLITE_FEATURES
-from logisense.signals.weather     import WeatherProcessor,   N_WEATHER_FEATURES
-from logisense.signals.geopolitics import GeopoliticsProcessor, N_GEO_FEATURES
-from logisense.signals.sentiment   import SentimentProcessor,  N_SENTIMENT_FEATURES
-
+from logisense.signals import FusedSignalState, SignalFusionEngine
+from logisense.signals.geopolitics import N_GEO_FEATURES, GeopoliticsProcessor
+from logisense.signals.satellite import N_SATELLITE_FEATURES, SatelliteProcessor
+from logisense.signals.sentiment import N_SENTIMENT_FEATURES, SentimentProcessor
+from logisense.signals.weather import N_WEATHER_FEATURES, WeatherProcessor
 
 NODE_IDS = [f"node_{i:03d}" for i in range(10)]
 
@@ -17,7 +16,7 @@ NODE_IDS = [f"node_{i:03d}" for i in range(10)]
 class TestSignalProcessors:
     def test_satellite_shape(self):
         proc = SatelliteProcessor()
-        out  = proc.fetch(NODE_IDS, mock=True)
+        out = proc.fetch(NODE_IDS, mock=True)
         assert out.shape == (10, N_SATELLITE_FEATURES)
         assert out.dtype == np.float32
         assert np.all(out >= 0) and np.all(out <= 1)
@@ -36,9 +35,12 @@ class TestSignalProcessors:
 
     def test_cyclone_risk_formula(self):
         risk = WeatherProcessor.cyclone_risk(
-            node_lat=25.0, node_lon=121.0,
-            storm_lat=22.0, storm_lon=118.0,
-            category=4, landfall_hours=24.0,
+            node_lat=25.0,
+            node_lon=121.0,
+            storm_lat=22.0,
+            storm_lon=118.0,
+            category=4,
+            landfall_hours=24.0,
         )
         assert 0.0 <= risk <= 1.0
 
@@ -71,7 +73,7 @@ class TestSignalFusionEngine:
 
     def test_top_risk_nodes(self, engine):
         state = engine.fetch_and_fuse("test_net", node_ids=NODE_IDS, mock=True)
-        top5  = state.top_risk_nodes(5)
+        top5 = state.top_risk_nodes(5)
         assert len(top5) == 5
         scores = [s for _, s in top5]
         assert scores == sorted(scores, reverse=True)

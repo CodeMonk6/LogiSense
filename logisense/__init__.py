@@ -15,14 +15,14 @@ Usage:
     result   = pipeline.run(network_id="my_network", horizon_days=14)
 """
 
+from logisense.agent import MitigationAgent
+from logisense.causal import CausalDisruptionEngine
 from logisense.pipeline import LogiSensePipeline
-from logisense.signals  import SignalFusionEngine
-from logisense.causal   import CausalDisruptionEngine
-from logisense.twin     import DigitalTwin
-from logisense.agent    import MitigationAgent
+from logisense.signals import SignalFusionEngine
+from logisense.twin import DigitalTwin
 
 __version__ = "0.1.0"
-__author__  = "Sourabh Sharma"
+__author__ = "Sourabh Sharma"
 
 __all__ = [
     "LogiSensePipeline",

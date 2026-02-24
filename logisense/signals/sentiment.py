@@ -39,31 +39,63 @@ Yang et al. (2020). FinBERT: A Pretrained Language Model for Financial
 Communications. arXiv:2006.08097.
 """
 
-import numpy as np
 from typing import Dict, List, Optional
+
+import numpy as np
 
 N_SENTIMENT_FEATURES = 32
 
 FEATURE_NAMES = [
-    "distress_score", "earnings_neg_sentiment", "cds_spread_z",
-    "going_concern", "layoff_mentions", "factory_closure",
-    "debt_downgrade", "litigation_risk", "esg_labor",
-    "esg_env", "revenue_miss", "margin_compression",
-    "capex_cut", "inventory_writedown", "supplier_concentration",
-    "sole_source", "payment_delay", "credit_utilization",
-    "mgmt_turnover", "force_majeure", "strike_signal",
-    "absenteeism_proxy", "regulatory_risk", "cert_lapse",
-    "financial_health", "operational_risk", "geo_exposure",
-    "single_site", "tech_obsolescence", "quality_incidents",
-    "delivery_decline", "overall_risk",
+    "distress_score",
+    "earnings_neg_sentiment",
+    "cds_spread_z",
+    "going_concern",
+    "layoff_mentions",
+    "factory_closure",
+    "debt_downgrade",
+    "litigation_risk",
+    "esg_labor",
+    "esg_env",
+    "revenue_miss",
+    "margin_compression",
+    "capex_cut",
+    "inventory_writedown",
+    "supplier_concentration",
+    "sole_source",
+    "payment_delay",
+    "credit_utilization",
+    "mgmt_turnover",
+    "force_majeure",
+    "strike_signal",
+    "absenteeism_proxy",
+    "regulatory_risk",
+    "cert_lapse",
+    "financial_health",
+    "operational_risk",
+    "geo_exposure",
+    "single_site",
+    "tech_obsolescence",
+    "quality_incidents",
+    "delivery_decline",
+    "overall_risk",
 ]
 
 HIGH_RISK_PHRASES = [
-    "force majeure", "going concern", "material uncertainty",
-    "production halt", "facility closure", "workforce reduction",
-    "supplier default", "raw material shortage", "inventory depletion",
-    "quality hold", "regulatory hold", "shipment delay",
-    "capacity constraint", "single source", "cash flow concerns",
+    "force majeure",
+    "going concern",
+    "material uncertainty",
+    "production halt",
+    "facility closure",
+    "workforce reduction",
+    "supplier default",
+    "raw material shortage",
+    "inventory depletion",
+    "quality hold",
+    "regulatory hold",
+    "shipment delay",
+    "capacity constraint",
+    "single source",
+    "cash flow concerns",
 ]
 
 
@@ -96,9 +128,9 @@ class SentimentProcessor:
         rng = np.random.default_rng(seed=37)
         data = rng.uniform(0, 0.2, (n, N_SENTIMENT_FEATURES)).astype(np.float32)
         # Distress on node 0
-        data[0, 0] = 0.83   # distress
-        data[0, 3] = 0.77   # going concern
-        data[0, 4] = 0.72   # layoff mentions
+        data[0, 0] = 0.83  # distress
+        data[0, 3] = 0.77  # going concern
+        data[0, 4] = 0.72  # layoff mentions
         data[0, 31] = 0.81  # overall risk
         # Moderate risk on node 4
         data[4, 24] = 0.61
@@ -109,6 +141,7 @@ class SentimentProcessor:
         if self._model is None:
             try:
                 from transformers import pipeline as hf_pipeline
+
                 self._model = hf_pipeline(
                     "text-classification", model=self.model_name, device=-1
                 )
@@ -134,11 +167,10 @@ class SentimentProcessor:
                 "phrase_density": phrase_density,
             }
 
-        chunks = [text[i: i + 512] for i in range(0, min(len(text), 4096), 512)]
+        chunks = [text[i : i + 512] for i in range(0, min(len(text), 4096), 512)]
         results = self._model(chunks)
         neg_scores = [
-            r["score"] if r["label"] == "negative" else 1 - r["score"]
-            for r in results
+            r["score"] if r["label"] == "negative" else 1 - r["score"] for r in results
         ]
         avg_neg = float(np.mean(neg_scores))
         return {
