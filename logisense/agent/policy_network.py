@@ -24,7 +24,7 @@ where r_t(θ) = π_θ(a|s) / π_old(a|s),  ε = 0.2 (default),
       c_v = value loss coefficient,  c_e = entropy coefficient.
 """
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -78,7 +78,7 @@ class PolicyNetwork(nn.Module):
     def forward(
         self,
         obs: torch.Tensor,  # (B, obs_dim)
-        action_mask: torch.Tensor | None = None,  # (B, n_actions) bool
+        action_mask: Optional[torch.Tensor] = None,  # (B, n_actions) bool
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass.
@@ -99,7 +99,7 @@ class PolicyNetwork(nn.Module):
     def act(
         self,
         obs: torch.Tensor,
-        action_mask: torch.Tensor | None = None,
+        action_mask: Optional[torch.Tensor] = None,
         deterministic: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
