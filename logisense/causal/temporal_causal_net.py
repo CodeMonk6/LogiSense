@@ -149,7 +149,7 @@ class TemporalCausalNet(nn.Module):
 
     def __init__(
         self,
-        d_signal: int = 128,
+        d_signal: int = 84,
         d_model: int = 256,
         n_layers: int = 6,
         n_horizons: int = 5,

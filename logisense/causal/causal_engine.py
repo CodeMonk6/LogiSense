@@ -138,7 +138,7 @@ class CausalDisruptionEngine(torch.nn.Module):
 
     def __init__(
         self,
-        d_signal: int = 128,
+        d_signal: int = 84,
         d_model: int = 256,
         n_layers: int = 6,
         horizon_days: int = 21,
@@ -243,7 +243,7 @@ class CausalDisruptionEngine(torch.nn.Module):
         with open(p / "config.json", "w") as f:
             json.dump(
                 {
-                    "d_signal": 128,
+                    "d_signal": 84,
                     "d_model": 256,
                     "n_layers": 6,
                     "horizon_days": self.horizon_days,
