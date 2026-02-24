@@ -1,6 +1,7 @@
 """Integration tests — full pipeline end to end."""
 
 import pytest
+
 from logisense import LogiSensePipeline
 from logisense.pipeline import PipelineResult
 
@@ -24,6 +25,7 @@ class TestPipeline:
 
     def test_twin_state_obs_no_nan(self, pipeline):
         import numpy as np
+
         result = pipeline.run(horizon_days=3)
         assert not np.isnan(result.twin_state.obs).any()
 
@@ -35,6 +37,7 @@ class TestPipeline:
 
     def test_from_config(self, tmp_path):
         import yaml
+
         cfg = {
             "n_nodes": 10,
             "n_actions": 16,

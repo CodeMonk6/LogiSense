@@ -28,18 +28,19 @@ The agent is incentivised to maintain service levels at minimum cost and
 as early as possible (preemption bonus decays with proximity to disruption).
 """
 
-import numpy as np
 from dataclasses import dataclass
 from typing import Dict, Optional
+
+import numpy as np
 
 
 @dataclass
 class RewardComponents:
-    continuity:  float
-    cost:        float
-    speed:       float
-    stockout:    float
-    total:       float
+    continuity: float
+    cost: float
+    speed: float
+    stockout: float
+    total: float
 
 
 class RewardFunction:
@@ -57,22 +58,22 @@ class RewardFunction:
     def __init__(
         self,
         w_continuity: float = 0.50,
-        w_cost:       float = 0.20,
-        w_speed:      float = 0.20,
-        w_stockout:   float = 0.10,
-        target_fill:  float = 0.95,
+        w_cost: float = 0.20,
+        w_speed: float = 0.20,
+        w_stockout: float = 0.10,
+        target_fill: float = 0.95,
     ):
         self.w_continuity = w_continuity
-        self.w_cost       = w_cost
-        self.w_speed      = w_speed
-        self.w_stockout   = w_stockout
-        self.target_fill  = target_fill
+        self.w_cost = w_cost
+        self.w_speed = w_speed
+        self.w_stockout = w_stockout
+        self.target_fill = target_fill
 
     def compute(
         self,
-        snapshot:        Dict[str, dict],
-        action_cost:     float = 0.0,
-        days_to_onset:   Optional[float] = None,
+        snapshot: Dict[str, dict],
+        action_cost: float = 0.0,
+        days_to_onset: Optional[float] = None,
         max_action_cost: float = 10_000.0,
     ) -> RewardComponents:
         """
@@ -88,7 +89,7 @@ class RewardFunction:
             RewardComponents with individual terms and total.
         """
         fill_rates = [v.get("fill_rate", 1.0) for v in snapshot.values()]
-        avg_fill   = float(np.mean(fill_rates))
+        avg_fill = float(np.mean(fill_rates))
 
         # Service continuity: reward for being at or above target fill rate
         r_continuity = np.clip(avg_fill / self.target_fill, 0.0, 1.0)
@@ -103,14 +104,17 @@ class RewardFunction:
             r_speed = 0.0
 
         # Stockout penalty
-        stockout_frac = sum(1 for v in snapshot.values()
-                            if v.get("fill_rate", 1.0) < 0.80) / max(len(snapshot), 1)
+        stockout_frac = sum(
+            1 for v in snapshot.values() if v.get("fill_rate", 1.0) < 0.80
+        ) / max(len(snapshot), 1)
         p_stockout = stockout_frac
 
-        total = (self.w_continuity * r_continuity
-                 + self.w_cost       * r_cost
-                 + self.w_speed      * r_speed
-                 - self.w_stockout   * p_stockout)
+        total = (
+            self.w_continuity * r_continuity
+            + self.w_cost * r_cost
+            + self.w_speed * r_speed
+            - self.w_stockout * p_stockout
+        )
 
         return RewardComponents(
             continuity=float(r_continuity),

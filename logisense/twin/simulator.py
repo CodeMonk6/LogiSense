@@ -14,30 +14,32 @@ Each step returns the network state as a dict of per-node metrics, which
 is consumed by the StateEncoder to produce the RL observation vector.
 """
 
-import numpy as np
-from typing import Dict, List, Optional, Tuple
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from typing import Dict, List, Optional, Tuple
 
-from logisense.twin.network_graph import SupplyNetwork, NodeType, NodeStatus
+import numpy as np
+
+from logisense.twin.network_graph import NodeStatus, NodeType, SupplyNetwork
 
 logger = logging.getLogger(__name__)
 
 # Disruption probability thresholds
-DEGRADED_THRESHOLD  = 0.40
+DEGRADED_THRESHOLD = 0.40
 DISRUPTED_THRESHOLD = 0.65
-CLOSED_THRESHOLD    = 0.85
+CLOSED_THRESHOLD = 0.85
 
 
 class InTransitShipment:
     """Tracks a shipment moving through a lane."""
+
     __slots__ = ("lane_id", "src", "dst", "quantity", "arrival_day")
 
     def __init__(self, lane_id, src, dst, quantity, arrival_day):
-        self.lane_id     = lane_id
-        self.src         = src
-        self.dst         = dst
-        self.quantity    = quantity
+        self.lane_id = lane_id
+        self.src = src
+        self.dst = dst
+        self.quantity = quantity
         self.arrival_day = arrival_day
 
 
@@ -51,14 +53,14 @@ class Simulator:
     """
 
     def __init__(self, network: SupplyNetwork, demand_sigma: float = 0.10):
-        self.network      = network
+        self.network = network
         self.demand_sigma = demand_sigma
-        self.day          = 0
-        self.rng          = np.random.default_rng(seed=42)
+        self.day = 0
+        self.rng = np.random.default_rng(seed=42)
 
-        self._pipeline:   List[InTransitShipment] = []
-        self._metrics:    Dict[str, dict]          = defaultdict(dict)
-        self._stockout_days: Dict[str, int]        = defaultdict(int)
+        self._pipeline: List[InTransitShipment] = []
+        self._metrics: Dict[str, dict] = defaultdict(dict)
+        self._stockout_days: Dict[str, int] = defaultdict(int)
 
     # ── public interface ─────────────────────────────────────────────────
 
@@ -122,14 +124,14 @@ class Simulator:
             if node.node_type not in (NodeType.CUSTOMER, NodeType.DISTRIBUTION_CENTER):
                 continue
             base_demand = node.metadata.get("avg_daily_demand", 100.0)
-            noise       = self.rng.normal(1.0, self.demand_sigma)
-            demand      = max(0.0, base_demand * noise)
+            noise = self.rng.normal(1.0, self.demand_sigma)
+            demand = max(0.0, base_demand * noise)
 
-            fulfilled   = min(demand, node.inventory)
+            fulfilled = min(demand, node.inventory)
             node.inventory -= fulfilled
 
             fill_rate = fulfilled / demand if demand > 0 else 1.0
-            self._metrics[node.node_id]["demand"]    = demand
+            self._metrics[node.node_id]["demand"] = demand
             self._metrics[node.node_id]["fulfilled"] = fulfilled
             self._metrics[node.node_id]["fill_rate"] = fill_rate
 
@@ -149,31 +151,33 @@ class Simulator:
             best_pred = min(
                 predecessors,
                 key=lambda p: self.network.nodes[p].risk_score
-                              + (1 if self.network.nodes[p].status != NodeStatus.OPERATIONAL else 0)
+                + (1 if self.network.nodes[p].status != NodeStatus.OPERATIONAL else 0),
             )
-            lane_data  = self.network.graph.get_edge_data(best_pred, node.node_id, {})
-            lane_id    = lane_data.get("lane_id", f"{best_pred}→{node.node_id}")
-            lt         = lane_data.get("lead_time", node.lead_time_days)
-            order_qty  = max(0, node.reorder_point * 2 - node.inventory)
+            lane_data = self.network.graph.get_edge_data(best_pred, node.node_id, {})
+            lane_id = lane_data.get("lane_id", f"{best_pred}→{node.node_id}")
+            lt = lane_data.get("lead_time", node.lead_time_days)
+            order_qty = max(0, node.reorder_point * 2 - node.inventory)
 
-            self._pipeline.append(InTransitShipment(
-                lane_id     = lane_id,
-                src         = best_pred,
-                dst         = node.node_id,
-                quantity    = order_qty,
-                arrival_day = self.day + int(np.ceil(lt)),
-            ))
+            self._pipeline.append(
+                InTransitShipment(
+                    lane_id=lane_id,
+                    src=best_pred,
+                    dst=node.node_id,
+                    quantity=order_qty,
+                    arrival_day=self.day + int(np.ceil(lt)),
+                )
+            )
 
     def _snapshot(self) -> Dict[str, dict]:
         snap = {}
         for nid, node in self.network.nodes.items():
             snap[nid] = {
-                "inventory":    node.inventory,
-                "capacity":     node.effective_capacity,
-                "risk_score":   node.risk_score,
-                "status":       int(node.status),
-                "fill_rate":    self._metrics[nid].get("fill_rate", 1.0),
-                "demand":       self._metrics[nid].get("demand", 0.0),
+                "inventory": node.inventory,
+                "capacity": node.effective_capacity,
+                "risk_score": node.risk_score,
+                "status": int(node.status),
+                "fill_rate": self._metrics[nid].get("fill_rate", 1.0),
+                "demand": self._metrics[nid].get("demand", 0.0),
                 "stockout_days": self._stockout_days[nid],
             }
         return snap

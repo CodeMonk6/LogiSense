@@ -8,8 +8,9 @@ Metrics for:
     - General ML (RMSE, Pearson, Spearman)
 """
 
-import numpy as np
 from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 
 
 class SupplyChainMetrics:
@@ -19,23 +20,23 @@ class SupplyChainMetrics:
 
     @staticmethod
     def precision_at_k(
-        predicted_risks: np.ndarray,   # (N,) predicted risk scores
-        true_disrupted:  np.ndarray,   # (N,) binary disruption labels
-        k:               int = 5,
+        predicted_risks: np.ndarray,  # (N,) predicted risk scores
+        true_disrupted: np.ndarray,  # (N,) binary disruption labels
+        k: int = 5,
     ) -> float:
         """
         Precision@K: fraction of top-K risk-flagged nodes that
         actually experienced a disruption.
         """
-        top_k_idx    = np.argsort(predicted_risks)[::-1][:k]
-        true_pos     = true_disrupted[top_k_idx].sum()
+        top_k_idx = np.argsort(predicted_risks)[::-1][:k]
+        true_pos = true_disrupted[top_k_idx].sum()
         return float(true_pos / k)
 
     @staticmethod
     def forecast_lead_time(
-        predicted_risk_series: np.ndarray,   # (T,) risk score over time
-        actual_onset_day:      int,
-        threshold:             float = 0.5,
+        predicted_risk_series: np.ndarray,  # (T,) risk score over time
+        actual_onset_day: int,
+        threshold: float = 0.5,
     ) -> float:
         """
         Days of lead time: first day forecast > threshold vs actual onset.
@@ -49,7 +50,7 @@ class SupplyChainMetrics:
     @staticmethod
     def avg_precision(
         predicted: np.ndarray,
-        true:      np.ndarray,
+        true: np.ndarray,
     ) -> float:
         """Average Precision (AP) for disruption forecasting."""
         sorted_idx = np.argsort(predicted)[::-1]
@@ -69,7 +70,7 @@ class SupplyChainMetrics:
 
     @staticmethod
     def weighted_service_level(
-        fill_rates:   np.ndarray,
+        fill_rates: np.ndarray,
         node_weights: np.ndarray,
     ) -> float:
         """Demand-weighted average fill rate."""
@@ -77,16 +78,16 @@ class SupplyChainMetrics:
 
     @staticmethod
     def inventory_cover_distribution(
-        inventories:  np.ndarray,
+        inventories: np.ndarray,
         daily_demands: np.ndarray,
     ) -> Dict[str, float]:
         """Summary stats for inventory cover (days) across nodes."""
         cover = inventories / np.maximum(daily_demands, 1.0)
         return {
-            "mean_days":   float(np.mean(cover)),
+            "mean_days": float(np.mean(cover)),
             "median_days": float(np.median(cover)),
-            "p5_days":     float(np.percentile(cover, 5)),
-            "min_days":    float(np.min(cover)),
+            "p5_days": float(np.percentile(cover, 5)),
+            "min_days": float(np.min(cover)),
         }
 
     # ── ML metrics ───────────────────────────────────────────────────────
@@ -108,6 +109,7 @@ class SupplyChainMetrics:
     @staticmethod
     def spearman_r(pred: np.ndarray, true: np.ndarray) -> float:
         from scipy.stats import spearmanr
+
         r, _ = spearmanr(pred, true)
         return float(r)
 
@@ -115,10 +117,10 @@ class SupplyChainMetrics:
 
     @staticmethod
     def cost_of_disruption(
-        stockout_units:  float,
-        avg_margin_usd:  float,
-        backorder_cost:  float,
-        lost_sale_frac:  float = 0.30,
+        stockout_units: float,
+        avg_margin_usd: float,
+        backorder_cost: float,
+        lost_sale_frac: float = 0.30,
     ) -> float:
         """
         Estimated cost of a disruption event.
@@ -129,7 +131,7 @@ class SupplyChainMetrics:
             backorder_cost:  Handling cost per backordered unit.
             lost_sale_frac:  Fraction of stockouts that become lost sales.
         """
-        lost     = stockout_units * lost_sale_frac * avg_margin_usd
+        lost = stockout_units * lost_sale_frac * avg_margin_usd
         backorder = stockout_units * (1 - lost_sale_frac) * backorder_cost
         return float(lost + backorder)
 
@@ -137,7 +139,7 @@ class SupplyChainMetrics:
     def mitigation_roi(
         disruption_cost_baseline: float,
         disruption_cost_mitigated: float,
-        mitigation_cost:          float,
+        mitigation_cost: float,
     ) -> float:
         """
         Return on investment for mitigation actions.

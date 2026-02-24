@@ -24,10 +24,11 @@ where r_t(θ) = π_θ(a|s) / π_old(a|s),  ε = 0.2 (default),
       c_v = value loss coefficient,  c_e = entropy coefficient.
 """
 
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple
 
 
 class PolicyNetwork(nn.Module):
@@ -43,13 +44,13 @@ class PolicyNetwork(nn.Module):
 
     def __init__(
         self,
-        obs_dim:    int,
-        n_actions:  int,
+        obs_dim: int,
+        n_actions: int,
         hidden_dim: int = 256,
-        n_layers:   int = 3,
+        n_layers: int = 3,
     ):
         super().__init__()
-        self.obs_dim   = obs_dim
+        self.obs_dim = obs_dim
         self.n_actions = n_actions
 
         # Shared trunk
@@ -76,8 +77,8 @@ class PolicyNetwork(nn.Module):
 
     def forward(
         self,
-        obs:         torch.Tensor,               # (B, obs_dim)
-        action_mask: torch.Tensor | None = None, # (B, n_actions) bool
+        obs: torch.Tensor,  # (B, obs_dim)
+        action_mask: torch.Tensor | None = None,  # (B, n_actions) bool
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass.
@@ -86,7 +87,7 @@ class PolicyNetwork(nn.Module):
             logits: (B, n_actions) unnormalised log probabilities
             values: (B,) state value estimates
         """
-        h      = self.trunk(obs)
+        h = self.trunk(obs)
         logits = self.actor_head(h)
         values = self.critic_head(h).squeeze(-1)
 
@@ -97,7 +98,7 @@ class PolicyNetwork(nn.Module):
 
     def act(
         self,
-        obs:         torch.Tensor,
+        obs: torch.Tensor,
         action_mask: torch.Tensor | None = None,
         deterministic: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -121,7 +122,7 @@ class PolicyNetwork(nn.Module):
 
     def evaluate(
         self,
-        obs:     torch.Tensor,
+        obs: torch.Tensor,
         actions: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -133,7 +134,7 @@ class PolicyNetwork(nn.Module):
             entropy:   (B,) entropy of action distribution
         """
         logits, values = self.forward(obs)
-        dist      = torch.distributions.Categorical(logits=logits)
+        dist = torch.distributions.Categorical(logits=logits)
         log_probs = dist.log_prob(actions)
-        entropy   = dist.entropy()
+        entropy = dist.entropy()
         return log_probs, values, entropy

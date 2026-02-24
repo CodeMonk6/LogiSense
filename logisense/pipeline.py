@@ -14,16 +14,17 @@ Returns a PipelineResult with the forecast, twin state, and
 recommended mitigation actions.
 """
 
-import yaml
 import logging
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
 from pathlib import Path
+from typing import Dict, List, Optional
 
-from logisense.signals  import SignalFusionEngine
-from logisense.causal   import CausalDisruptionEngine, DisruptionForecast
-from logisense.twin     import DigitalTwin
-from logisense.agent    import MitigationAgent, MitigationAction
+import yaml
+
+from logisense.agent import MitigationAction, MitigationAgent
+from logisense.causal import CausalDisruptionEngine, DisruptionForecast
+from logisense.signals import SignalFusionEngine
+from logisense.twin import DigitalTwin
 from logisense.twin.digital_twin import TwinState
 
 logger = logging.getLogger(__name__)
@@ -32,12 +33,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PipelineResult:
     """Full output of one LogiSense pipeline run."""
-    forecast:   DisruptionForecast
+
+    forecast: DisruptionForecast
     twin_state: TwinState
-    actions:    List[MitigationAction]
+    actions: List[MitigationAction]
     network_id: str
     horizon_days: int
-    metadata:   dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
 
     def summary(self) -> str:
         lines = [
@@ -52,8 +54,10 @@ class PipelineResult:
         ]
         for r in self.forecast.top_nodes(n=5):
             bar = "█" * int(r.peak_score * 20)
-            lines.append(f"    {r.node_id:<12s}  day {r.peak_risk_day:>2d}  "
-                          f"{r.peak_score:.1%}  {bar}")
+            lines.append(
+                f"    {r.node_id:<12s}  day {r.peak_risk_day:>2d}  "
+                f"{r.peak_score:.1%}  {bar}"
+            )
         lines += ["", "  Recommended Actions:"]
         for a in self.actions:
             lines.append(f"    [{a.priority:<6s}] {a.description}")
@@ -77,26 +81,26 @@ class LogiSensePipeline:
 
     def __init__(
         self,
-        signal_engine: Optional[SignalFusionEngine]     = None,
+        signal_engine: Optional[SignalFusionEngine] = None,
         causal_engine: Optional[CausalDisruptionEngine] = None,
-        twin:          Optional[DigitalTwin]             = None,
-        agent:         Optional[MitigationAgent]         = None,
-        mock_signals:  bool = True,
+        twin: Optional[DigitalTwin] = None,
+        agent: Optional[MitigationAgent] = None,
+        mock_signals: bool = True,
     ):
-        self.signals      = signal_engine or SignalFusionEngine()
-        self.causal       = causal_engine or CausalDisruptionEngine()
-        self.twin         = twin          or DigitalTwin.sample()
-        self.agent        = agent         or MitigationAgent(obs_dim=self.twin.obs_dim)
+        self.signals = signal_engine or SignalFusionEngine()
+        self.causal = causal_engine or CausalDisruptionEngine()
+        self.twin = twin or DigitalTwin.sample()
+        self.agent = agent or MitigationAgent(obs_dim=self.twin.obs_dim)
         self.mock_signals = mock_signals
 
     # ── run ──────────────────────────────────────────────────────────────
 
     def run(
         self,
-        network_id:    str  = "default",
-        horizon_days:  int  = 14,
-        top_k_actions: int  = 3,
-        update_dag:    bool = False,
+        network_id: str = "default",
+        horizon_days: int = 14,
+        top_k_actions: int = 3,
+        update_dag: bool = False,
     ) -> PipelineResult:
         """
         Execute the full pipeline once.
@@ -116,10 +120,11 @@ class LogiSensePipeline:
 
         # 1. Signal fusion
         logger.info("[1/4] Signal fusion...")
-        node_ids   = list(self.twin.network.nodes.keys())
-        node_types = {nid: int(n.node_type)
-                      for nid, n in self.twin.network.nodes.items()}
-        sig_state  = self.signals.fetch_and_fuse(
+        node_ids = list(self.twin.network.nodes.keys())
+        node_types = {
+            nid: int(n.node_type) for nid, n in self.twin.network.nodes.items()
+        }
+        sig_state = self.signals.fetch_and_fuse(
             network_id=network_id,
             node_ids=node_ids,
             node_types=node_types,
@@ -158,7 +163,7 @@ class LogiSensePipeline:
         with open(path) as f:
             cfg = yaml.safe_load(f)
 
-        twin  = DigitalTwin.sample(n_nodes=cfg.get("n_nodes", 20))
+        twin = DigitalTwin.sample(n_nodes=cfg.get("n_nodes", 20))
         agent = MitigationAgent(
             obs_dim=twin.obs_dim,
             n_actions=cfg.get("n_actions", 64),

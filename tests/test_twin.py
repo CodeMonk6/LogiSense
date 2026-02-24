@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 
 from logisense.twin import DigitalTwin, SupplyNetwork, TwinState
-from logisense.twin.simulator    import Simulator
-from logisense.twin.state_encoder import StateEncoder
 from logisense.twin.network_graph import NodeStatus
+from logisense.twin.simulator import Simulator
+from logisense.twin.state_encoder import StateEncoder
 
 
 @pytest.fixture
@@ -22,18 +22,18 @@ class TestSupplyNetwork:
 
     def test_bottlenecks_returns_list(self):
         net = SupplyNetwork.sample(n_nodes=15)
-        bt  = net.bottlenecks(k=5)
+        bt = net.bottlenecks(k=5)
         assert len(bt) <= 5
 
     def test_shortest_path(self):
-        net  = SupplyNetwork.sample(n_nodes=15)
+        net = SupplyNetwork.sample(n_nodes=15)
         nids = list(net.nodes.keys())
         path, cost = net.shortest_path(nids[0], nids[-1])
         # Either found or no path
         assert cost >= 0 or cost == float("inf")
 
     def test_path_risk_range(self):
-        net  = SupplyNetwork.sample(n_nodes=15)
+        net = SupplyNetwork.sample(n_nodes=15)
         nids = list(net.nodes.keys())
         risk = net.path_risk(nids[0], nids[5])
         assert 0.0 <= risk <= 1.0
@@ -47,7 +47,7 @@ class TestSimulator:
 
     def test_step_metrics_keys(self, twin):
         snap = twin.sim.step()
-        nid  = list(snap.keys())[0]
+        nid = list(snap.keys())[0]
         for key in ("inventory", "fill_rate", "demand", "status"):
             assert key in snap[nid]
 
@@ -66,17 +66,17 @@ class TestSimulator:
 class TestStateEncoder:
     def test_obs_shape(self, twin):
         snap = twin.sim.step()
-        obs  = twin.encoder.encode(snap)
+        obs = twin.encoder.encode(snap)
         assert obs.shape == (twin.obs_dim,)
 
     def test_obs_range(self, twin):
         snap = twin.sim.step()
-        obs  = twin.encoder.encode(snap)
+        obs = twin.encoder.encode(snap)
         assert np.all(obs >= 0.0) and np.all(obs <= 1.0)
 
     def test_no_nans(self, twin):
         snap = twin.sim.step()
-        obs  = twin.encoder.encode(snap)
+        obs = twin.encoder.encode(snap)
         assert not np.isnan(obs).any()
 
 

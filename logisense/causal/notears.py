@@ -31,11 +31,12 @@ Zheng et al. (2018). DAGs with NO TEARS: Continuous Optimization for
 Structure Learning. NeurIPS 2018.
 """
 
+import logging
+from typing import Optional
+
 import numpy as np
 from scipy.linalg import expm
 from scipy.optimize import minimize
-from typing import Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -59,22 +60,22 @@ class NOTEARSLearner:
 
     def __init__(
         self,
-        n_vars:    int   = 84,
-        lambda1:   float = 0.01,
-        lambda2:   float = 0.01,
-        rho_init:  float = 1.0,
-        rho_max:   float = 1e16,
-        h_tol:     float = 1e-8,
-        max_iter:  int   = 100,
+        n_vars: int = 84,
+        lambda1: float = 0.01,
+        lambda2: float = 0.01,
+        rho_init: float = 1.0,
+        rho_max: float = 1e16,
+        h_tol: float = 1e-8,
+        max_iter: int = 100,
         threshold: float = 0.3,
     ):
-        self.n_vars    = n_vars
-        self.lambda1   = lambda1
-        self.lambda2   = lambda2
-        self.rho_init  = rho_init
-        self.rho_max   = rho_max
-        self.h_tol     = h_tol
-        self.max_iter  = max_iter
+        self.n_vars = n_vars
+        self.lambda1 = lambda1
+        self.lambda2 = lambda2
+        self.rho_init = rho_init
+        self.rho_max = rho_max
+        self.h_tol = h_tol
+        self.max_iter = max_iter
         self.threshold = threshold
         self.W_: Optional[np.ndarray] = None
 
@@ -99,18 +100,21 @@ class NOTEARSLearner:
         W = W_flat.reshape(d, d)
         n = X.shape[0]
 
-        res      = X - X @ W
-        loss_rec = 0.5 / n * (res ** 2).sum()
+        res = X - X @ W
+        loss_rec = 0.5 / n * (res**2).sum()
         grad_rec = -1.0 / n * X.T @ res
 
         loss_l1 = self.lambda1 * np.abs(W).sum()
         grad_l1 = self.lambda1 * np.sign(W)
 
-        h        = self._h(W)
-        loss_h   = 0.5 * rho * h ** 2 + alpha * h
-        grad_h   = (rho * h + alpha) * self._h_grad(W)
+        h = self._h(W)
+        loss_h = 0.5 * rho * h**2 + alpha * h
+        grad_h = (rho * h + alpha) * self._h_grad(W)
 
-        return float(loss_rec + loss_l1 + loss_h), (grad_rec + grad_l1 + grad_h).flatten()
+        return (
+            float(loss_rec + loss_l1 + loss_h),
+            (grad_rec + grad_l1 + grad_h).flatten(),
+        )
 
     # ── public interface ─────────────────────────────────────────────────
 
@@ -137,8 +141,11 @@ class NOTEARSLearner:
 
         for it in range(self.max_iter):
             result = minimize(
-                self._objective, W.flatten(), args=(X, rho, alpha),
-                method="L-BFGS-B", jac=True,
+                self._objective,
+                W.flatten(),
+                args=(X, rho, alpha),
+                method="L-BFGS-B",
+                jac=True,
                 options={"maxiter": 100, "ftol": 1e-12},
             )
             W = result.x.reshape(d, d)
