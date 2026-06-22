@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg"/>
   <img src="https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg"/>
   <img src="https://img.shields.io/badge/RL-PPO-green.svg"/>
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg"/>
+  <img src="https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg"/>
   <img src="https://img.shields.io/badge/Status-Research-orange.svg"/>
 </p>
 
